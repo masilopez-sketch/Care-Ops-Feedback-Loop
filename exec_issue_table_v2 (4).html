@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPSY Feedback Loop — Issue Table</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --border-accent: #c8b4d8;
+    --panel-bg: rgba(255,255,255,0.78);
+    --panel-border: #e2d4ef;
+    --header-bg: rgba(200,180,216,0.35);
+    --text-primary: #1a1a2e;
+    --text-secondary: #5a5a7a;
+    --text-muted: #9999b3;
+    --font: 'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: #e8e0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+    gap: 20px;
+  }
+
+  .controls {
+    width: 1060px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .controls-lbl { font-size: 11px; font-weight: 600; color: #aaa; text-transform: uppercase; letter-spacing: 0.07em; }
+  .field-inline { display: flex; flex-direction: column; gap: 3px; }
+  .field-inline label { font-size: 10px; font-weight: 500; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+  .field-inline input {
+    font-family: var(--font); font-size: 13px;
+    border: 1px solid #ddd; border-radius: 6px;
+    padding: 6px 10px; color: var(--text-primary);
+    background: #fafafa; width: 170px;
+  }
+  .field-inline input:focus { outline: none; border-color: #b39ddb; background: white; }
+  .spacer { flex: 1; }
+  .btn {
+    font-family: var(--font); font-size: 12px; font-weight: 600;
+    padding: 8px 18px; border-radius: 7px; border: none;
+    cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn-primary { background: #7c4daa; color: white; }
+  .btn-secondary { background: #f0eaf8; color: #7c4daa; border: 1px solid #c9b3e2; }
+  .btn-add { background: #f3eef9; color: #5a3a8a; border: 1.5px dashed #c8b4d8; }
+  .btn-add:hover { background: #ede5f8; opacity: 1; }
+
+  .slide {
+    width: 1060px;
+    background: linear-gradient(135deg, #f0e8f5 0%, #eaeaf6 45%, #fce4ec 100%);
+    padding: 32px 36px 28px;
+    font-family: var(--font);
+    border-left: 7px solid var(--border-accent);
+    border-radius: 4px;
+  }
+
+  .slide-title { font-size: 28px; font-weight: 300; color: var(--text-primary); margin-bottom: 22px; }
+  .slide-title strong { font-weight: 700; }
+
+  .table-wrap {
+    border: 1.5px solid var(--panel-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr { background: var(--header-bg); }
+  thead th {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-primary);
+    padding: 11px 12px; text-align: left;
+    border-right: 1px solid var(--panel-border);
+    border-bottom: 1.5px solid var(--panel-border);
+    vertical-align: bottom; line-height: 1.4;
+  }
+  thead th:last-child { border-right: none; }
+
+  .col-type     { width: 130px; }
+  .col-summary  { width: 190px; }
+  .col-count    { width: 80px; }
+  .col-financial{ width: 90px; }
+  .col-rca      { width: 210px; }
+  .col-mit      { width: 190px; }
+  .col-status   { width: 110px; }
+  .col-del      { width: 32px; }
+
+  tbody tr { background: var(--panel-bg); border-bottom: 1px solid rgba(180,160,210,0.2); }
+  tbody tr:nth-child(even) { background: rgba(255,255,255,0.55); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 0; border-right: 1px solid rgba(180,160,210,0.18); vertical-align: top; }
+  tbody td:last-child { border-right: none; }
+
+  .cell-input {
+    width: 100%; min-height: 72px;
+    font-family: var(--font); font-size: 11.5px;
+    color: var(--text-primary); line-height: 1.5;
+    border: none; background: transparent;
+    padding: 9px 11px; resize: none; outline: none;
+    overflow: hidden; display: block;
+  }
+  .cell-input:focus { background: rgba(255,255,255,0.7); }
+  .cell-input::placeholder { color: #ccc; font-size: 10.5px; }
+
+  .status-cell { padding: 9px 11px; display: flex; flex-direction: column; gap: 6px; }
+  .status-select {
+    font-family: var(--font); font-size: 11px; font-weight: 500;
+    border: 1px solid var(--panel-border); border-radius: 20px;
+    padding: 4px 10px; background: white; cursor: pointer;
+    color: var(--text-secondary); outline: none; width: 100%;
+    appearance: none; text-align: center;
+  }
+  .status-select:focus { border-color: var(--border-accent); }
+
+  .bubble {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px; white-space: nowrap;
+  }
+  .bdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .b-complete   { background: #e4f5e4; color: #2d6a2d; }
+  .b-complete .bdot   { background: #4caf50; }
+  .b-inprogress { background: #fdf9e3; color: #7a6500; }
+  .b-inprogress .bdot { background: #f0d000; border: 1px solid #ccc; }
+  .b-pending    { background: #f0edf7; color: var(--text-muted); }
+  .b-pending .bdot    { background: var(--border-accent); }
+
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 10px 6px; color: #d0c8dc; font-size: 13px;
+    display: block; width: 100%; text-align: center; transition: color 0.15s;
+  }
+  .del-btn:hover { color: #a0406a; }
+
+  .print-note { width: 1060px; font-size: 11px; color: #aaa; text-align: center; }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .controls, .print-note, .del-btn, .col-del { display: none !important; }
+    .status-select { display: none !important; }
+    .slide { border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <span class="controls-lbl">Table</span>
+  <div class="field-inline">
+    <label>Month</label>
+    <input type="text" id="f-month" value="March" oninput="updateTitle()" />
+  </div>
+  <div class="field-inline">
+    <label>Brand / Region</label>
+    <input type="text" id="f-brand" value="IPSY US" oninput="updateTitle()" />
+  </div>
+  <div class="spacer"></div>
+  <button class="btn btn-add" onclick="addRow()">+ Add Issue Row</button>
+  <button class="btn btn-secondary" onclick="clearAll()">Clear All</button>
+  <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+<div class="slide" id="slide">
+  <p class="slide-title" id="s-title">March <strong>Member Facing Issues — IPSY US</strong></p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-type">Issue Type /<br>Responsible Team</th>
+          <th class="col-summary">Issue Summary<br><span style="font-size:9px;font-weight:400;color:var(--text-muted);">Uncontrollable noted with *</span></th>
+          <th class="col-count">Affected<br>Count</th>
+          <th class="col-financial">Financial<br>Impact</th>
+          <th class="col-rca">Root Cause Analysis (RCA)</th>
+          <th class="col-mit">Mitigation &amp; Timeline</th>
+          <th class="col-status">Mitigation<br>Status</th>
+          <th class="col-del"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<p class="print-note">💡 Screenshot the slide above to paste into Google Slides, or click Print / Save PDF.</p>
+
+<script>
+let n = 0;
+
+function updateTitle() {
+  const m = document.getElementById('f-month').value.trim() || 'Month';
+  const b = document.getElementById('f-brand').value.trim();
+  document.getElementById('s-title').innerHTML = `${m} <strong>Member Facing Issues${b ? ' — ' + b : ''}</strong>`;
+}
+
+function bubble(s) {
+  if (s === 'complete')   return `<span class="bubble b-complete"><span class="bdot"></span>Complete</span>`;
+  if (s === 'inprogress') return `<span class="bubble b-inprogress"><span class="bdot"></span>In Progress</span>`;
+  return `<span class="bubble b-pending"><span class="bdot"></span>Pending</span>`;
+}
+
+function autoExpand(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function addRow(d) {
+  n++;
+  const i = n;
+  d = d || {};
+  const tr = document.createElement('tr');
+  tr.id = `row-${i}`;
+  tr.innerHTML = `
+    <td><textarea class="cell-input" placeholder="Issue type&#10;&#10;Team name" id="r${i}-type">${d.type||''}</textarea></td>
+    <td><textarea class="cell-input" placeholder="Describe the issue..." id="r${i}-summary">${d.summary||''}</textarea></td>
+    <td><textarea class="cell-input" placeholder="e.g. 1,367" id="r${i}-count">${d.count||''}</textarea></td>
+    <td><textarea class="cell-input" placeholder="e.g. $20,836" id="r${i}-fin">${d.fin||''}</textarea></td>
+    <td><textarea class="cell-input" placeholder="To be completed by issue owner..." id="r${i}-rca">${d.rca||''}</textarea></td>
+    <td><textarea class="cell-input" placeholder="To be completed by issue owner..." id="r${i}-mit">${d.mit||''}</textarea></td>
+    <td>
+      <div class="status-cell">
+        <select class="status-select" id="r${i}-sel" onchange="refreshBubble(${i})">
+          <option value="pending"    ${(!d.s||d.s==='pending')   ?'selected':''}>Pending</option>
+          <option value="inprogress" ${d.s==='inprogress'        ?'selected':''}>In Progress</option>
+          <option value="complete"   ${d.s==='complete'          ?'selected':''}>Complete</option>
+        </select>
+        <div id="r${i}-bub">${bubble(d.s||'pending')}</div>
+      </div>
+    </td>
+    <td><button class="del-btn" onclick="delRow(${i})">✕</button></td>
+  `;
+  document.getElementById('tbody').appendChild(tr);
+  tr.querySelectorAll('.cell-input').forEach(el => {
+    autoExpand(el);
+    el.addEventListener('input', () => autoExpand(el));
+  });
+}
+
+function refreshBubble(i) {
+  document.getElementById(`r${i}-bub`).innerHTML = bubble(document.getElementById(`r${i}-sel`).value);
+}
+
+function delRow(i) { const r = document.getElementById(`row-${i}`); if (r) r.remove(); }
+function clearAll() { if (confirm('Clear all rows?')) { document.getElementById('tbody').innerHTML = ''; n = 0; } }
+
+addRow({ type: 'Fulfillment\nInventory Shortage\n\nFulfillments Ops', summary: 'Short shipped Commerce Orders\n\nShortship rate: 1.08%, increase of 0.43%', count: '1,367', fin: '$20,836.03', s: 'inprogress' });
+addRow({ type: 'IPSY Match\nHWI\n\nPers Ops', summary: 'Extra member receiving a repeat item in their March order.', count: '16', fin: 'N/A', rca: 'Within acceptable volume', mit: 'Within acceptable volume', s: 'complete' });
+addRow({ type: 'Site product issue\nIncorrect product photo\n\nDigital Ops', summary: 'Incorrect PDP shared in commerce', s: 'pending' });
+</script>
+</body>
+</html>
